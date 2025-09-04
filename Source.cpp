@@ -66,7 +66,6 @@ void findMaxMinDiff() {
 		else if (arr[i] < min) min = arr[i];
 	}
 
-	// Разница
 	diff = max - min;
 	printf("Максимальное значение: %d\nМинимальное значение: %d\nРазница: %d\n", max, min, diff);
 }
