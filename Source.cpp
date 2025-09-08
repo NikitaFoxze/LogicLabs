@@ -28,7 +28,7 @@ int main() {
 			"2. Инициализировать массив случайными числами\n"
 			"3. Создать массив произвольного размера\n"
 			"4. Суммировать строки и столбцы матрицы\n"
-			"5. Искать студента по имени\n"
+			"5. Искать студента по фамилии\n"
 			"0. Выход\n"
 			"\nВаш выбор: ");
 		scanf_s("%d", &choice);
@@ -173,8 +173,8 @@ void sumRowsColsMatrix(int rows, int cols) {
 void searchStudentByName() {
 	Student students[] = {
 		{"Ivanov", "Иван", "Инф.", 12345},
-		{"Petrov", "Петр", "Мат.", 54321},
-		{"Sidorov", "Сергей", "Физ.", 67890}
+		{"Ivanova", "Петра", "Мат.", 54321},
+		{"Ivanovovich", "Сергей", "Физ.", 67890}
 	};
 
 	char searchFamilia[20];
@@ -184,14 +184,13 @@ void searchStudentByName() {
 	scanf_s("%s", searchFamilia, sizeof(searchFamilia));
 
 	for (int i = 0; i < 3; i++) {
-		if (strcmp(students[i].familia, searchFamilia) == 0) {
+		if (strstr(students[i].familia, searchFamilia)) {
 			printf("\nСтудент найден:\n"
 				"Фамилия: %s\nИмя: %s\nФакультет: %s\nЗачётная книжка: %d\n",
 				students[i].familia, students[i].imya,
 				students[i].fakultet, students[i].zach_num);
 
 			found = 1;
-			break;
 		}
 	}
 
