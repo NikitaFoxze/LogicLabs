@@ -14,18 +14,27 @@ struct node* queue_front = NULL;
 struct node* queue_rear = NULL;
 struct node* stack_top = NULL;
 
+// Флаг направления приоритета (1 - по убыванию, 0 - по возрастанию)
+int priority_direction = 1; // по умолчанию: чем больше число - тем выше приоритет
+
+// Функции для работы с приоритетной очередью
 struct node* get_priority_struct(void);
 void insert_by_priority(void);
 void display_priority(void);
 void delete_highest_priority(void);
 void destroy_priority_queue(void);
+void change_priority_direction(void); // new: изменение направления приоритетов
+void change_element_priority(void);   // new: изменение приоритета элемента по имени
+void delete_element_by_name(void);    // new: удаление элемента по названию
 
+// Функции для работы с обычной очередью
 struct node* get_queue_struct(void);
 void enqueue(void);
 void dequeue(void);
 void display_queue(void);
 void destroy_queue(void);
 
+// Функции для работы со стеком
 struct node* get_stack_struct(void);
 void push(void);
 void pop(void);
@@ -50,17 +59,23 @@ int main() {
                 printf("2. Просмотреть очередь\n");
                 printf("3. Удалить элемент с наивысшим приоритетом\n");
                 printf("4. Очистить очередь\n");
-                printf("5. Вернуться в главное меню\n");
+                printf("5. Изменить направление приоритетов\n");     // НОВЫЙ ПУНКТ
+                printf("6. Изменить приоритет элемента по имени\n");  // НОВЫЙ ПУНКТ
+                printf("7. Удалить элемент по названию\n");           // НОВЫЙ ПУНКТ
+                printf("8. Вернуться в главное меню\n");
                 printf("Выберите действие: ");
                 scanf_s("%d", &choice);
 
-                if (choice == 5) break;
+                if (choice == 8) break;
 
                 switch (choice) {
                 case 1: insert_by_priority(); break;
                 case 2: display_priority(); break;
                 case 3: delete_highest_priority(); break;
                 case 4: destroy_priority_queue(); break;
+                case 5: change_priority_direction(); break;  // НОВЫЙ ВЫЗОВ
+                case 6: change_element_priority(); break;    // НОВЫЙ ВЫЗОВ
+                case 7: delete_element_by_name(); break;     // НОВЫЙ ВЫЗОВ
                 default: printf("Неверный выбор\n");
                 }
             }
@@ -156,7 +171,7 @@ struct node* get_priority_struct(void) {
         return NULL;
     }
 
-    printf("Введите приоритет (целое число, чем больше - тем выше приоритет): ");
+    printf("Введите приоритет (целое число): ");
     scanf_s("%d", &prio);
 
     strcpy_s(p->inf, sizeof(p->inf), s);
@@ -173,20 +188,44 @@ void insert_by_priority(void) {
     struct node* current = priority_head;
     struct node* prev = NULL;
 
-    if (priority_head == NULL || p->priority > priority_head->priority) {
-        p->next = priority_head;
+    if (priority_head == NULL) {
         priority_head = p;
         printf("Элемент '%s' с приоритетом %d добавлен\n", p->inf, p->priority);
         return;
     }
 
-    while (current != NULL && current->priority >= p->priority) {
-        prev = current;
-        current = current->next;
+    // Вставка с учетом направления приоритета
+    if (priority_direction) {
+        // По убыванию (чем больше число - тем выше приоритет)
+        if (p->priority > priority_head->priority) {
+            p->next = priority_head;
+            priority_head = p;
+        }
+        else {
+            while (current != NULL && current->priority >= p->priority) {
+                prev = current;
+                current = current->next;
+            }
+            prev->next = p;
+            p->next = current;
+        }
+    }
+    else {
+        // По возрастанию (чем меньше число - тем выше приоритет)
+        if (p->priority < priority_head->priority) {
+            p->next = priority_head;
+            priority_head = p;
+        }
+        else {
+            while (current != NULL && current->priority <= p->priority) {
+                prev = current;
+                current = current->next;
+            }
+            prev->next = p;
+            p->next = current;
+        }
     }
 
-    prev->next = p;
-    p->next = current;
     printf("Элемент '%s' с приоритетом %d добавлен\n", p->inf, p->priority);
 }
 
@@ -199,6 +238,9 @@ void display_priority(void) {
     }
 
     printf("\n=== ПРИОРИТЕТНАЯ ОЧЕРЕДЬ ===\n");
+    printf("Направление: %s\n", priority_direction ?
+        "по убыванию (чем БОЛЬШЕ число - тем ВЫШЕ приоритет)" :
+        "по возрастанию (чем МЕНЬШЕ число - тем ВЫШЕ приоритет)");
     printf("Приоритет | Данные\n");
     printf("----------|--------\n");
 
@@ -234,6 +276,192 @@ void destroy_priority_queue(void) {
 
     priority_head = NULL;
     printf("Приоритетная очередь очищена. Удалено элементов: %d\n", count);
+}
+
+// НОВАЯ ФУНКЦИЯ: Изменение направления приоритетов
+void change_priority_direction(void) {
+    if (priority_head == NULL) {
+        printf("Очередь пуста. Направление изменено.\n");
+        priority_direction = !priority_direction;
+        printf("Текущее направление: %s\n", priority_direction ?
+            "по убыванию (чем БОЛЬШЕ число - тем ВЫШЕ приоритет)" :
+            "по возрастанию (чем МЕНЬШЕ число - тем ВЫШЕ приоритет)");
+        return;
+    }
+
+    printf("Текущее направление: %s\n", priority_direction ?
+        "по убыванию (чем БОЛЬШЕ число - тем ВЫШЕ приоритет)" :
+        "по возрастанию (чем МЕНЬШЕ число - тем ВЫШЕ приоритет)");
+
+    priority_direction = !priority_direction;
+    printf("Направление изменено на: %s\n", priority_direction ?
+        "по убыванию (чем БОЛЬШЕ число - тем ВЫШЕ приоритет)" :
+        "по возрастанию (чем МЕНЬШЕ число - тем ВЫШЕ приоритет)");
+
+    // Пересортировка очереди при изменении направления
+    struct node* new_head = NULL;
+    struct node* current = priority_head;
+
+    while (current != NULL) {
+        struct node* next = current->next;
+        struct node* temp_current = new_head;
+        struct node* temp_prev = NULL;
+
+        if (new_head == NULL) {
+            new_head = current;
+            current->next = NULL;
+        }
+        else {
+            if (priority_direction) {
+                // По убыванию
+                while (temp_current != NULL && temp_current->priority >= current->priority) {
+                    temp_prev = temp_current;
+                    temp_current = temp_current->next;
+                }
+            }
+            else {
+                // По возрастанию
+                while (temp_current != NULL && temp_current->priority <= current->priority) {
+                    temp_prev = temp_current;
+                    temp_current = temp_current->next;
+                }
+            }
+
+            if (temp_prev == NULL) {
+                current->next = new_head;
+                new_head = current;
+            }
+            else {
+                temp_prev->next = current;
+                current->next = temp_current;
+            }
+        }
+        current = next;
+    }
+
+    priority_head = new_head;
+    printf("Очередь пересортирована в соответствии с новым направлением приоритетов.\n");
+}
+
+// НОВАЯ ФУНКЦИЯ: Изменение приоритета элемента по имени
+void change_element_priority(void) {
+    if (priority_head == NULL) {
+        printf("Приоритетная очередь пуста\n");
+        return;
+    }
+
+    char name[256];
+    printf("Введите название элемента для изменения приоритета: ");
+    scanf_s("%s", name, (unsigned)sizeof(name));
+
+    // Поиск элемента
+    struct node* current = priority_head;
+    struct node* prev = NULL;
+
+    while (current != NULL) {
+        if (strcmp(current->inf, name) == 0) {
+            // Элемент найден
+            int new_priority;
+            printf("Найден элемент '%s' с текущим приоритетом %d\n", current->inf, current->priority);
+            printf("Введите новый приоритет: ");
+            scanf_s("%d", &new_priority);
+
+            // Удаляем элемент из текущей позиции
+            if (prev == NULL) {
+                priority_head = current->next;
+            }
+            else {
+                prev->next = current->next;
+            }
+
+            // Обновляем приоритет
+            current->priority = new_priority;
+            current->next = NULL;
+
+            // Вставляем элемент обратно с новым приоритетом
+            struct node* insert_current = priority_head;
+            struct node* insert_prev = NULL;
+
+            if (priority_head == NULL) {
+                priority_head = current;
+            }
+            else {
+                if (priority_direction) {
+                    // По убыванию
+                    if (current->priority > priority_head->priority) {
+                        current->next = priority_head;
+                        priority_head = current;
+                    }
+                    else {
+                        while (insert_current != NULL && insert_current->priority >= current->priority) {
+                            insert_prev = insert_current;
+                            insert_current = insert_current->next;
+                        }
+                        insert_prev->next = current;
+                        current->next = insert_current;
+                    }
+                }
+                else {
+                    // По возрастанию
+                    if (current->priority < priority_head->priority) {
+                        current->next = priority_head;
+                        priority_head = current;
+                    }
+                    else {
+                        while (insert_current != NULL && insert_current->priority <= current->priority) {
+                            insert_prev = insert_current;
+                            insert_current = insert_current->next;
+                        }
+                        insert_prev->next = current;
+                        current->next = insert_current;
+                    }
+                }
+            }
+
+            printf("Приоритет элемента '%s' изменен на %d\n", name, new_priority);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+    printf("Элемент с названием '%s' не найден\n", name);
+}
+
+// НОВАЯ ФУНКЦИЯ: Удаление элемента по названию
+void delete_element_by_name(void) {
+    if (priority_head == NULL) {
+        printf("Приоритетная очередь пуста\n");
+        return;
+    }
+
+    char name[256];
+    printf("Введите название элемента для удаления: ");
+    scanf_s("%s", name, (unsigned)sizeof(name));
+
+    struct node* current = priority_head;
+    struct node* prev = NULL;
+
+    while (current != NULL) {
+        if (strcmp(current->inf, name) == 0) {
+            // Элемент найден
+            if (prev == NULL) {
+                // Удаление первого элемента
+                priority_head = current->next;
+            }
+            else {
+                prev->next = current->next;
+            }
+
+            printf("Элемент '%s' с приоритетом %d удален\n", current->inf, current->priority);
+            free(current);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+    printf("Элемент с названием '%s' не найден\n", name);
 }
 
 // ==================== ОБЫЧНАЯ ОЧЕРЕДЬ (FIFO) ====================
